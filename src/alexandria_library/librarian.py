@@ -13,7 +13,7 @@ from PyQt5.QtGui import QIcon, QStandardItemModel
 #BASE_PATH = os.path.expanduser("/media/fernando/INFORMATION/CIENCIA/CIENCIA-BOOKS+NOTES/")
 #BASE_PATH = os.path.expanduser("/mnt/boveda/DATASHEET")
 BASE_PATH  = os.path.expanduser("~/Alexandria")
-FILE_TYPES = ["*.pdf","*.ps", "*.txt", "*.md", "*.png", "*.djvu"]
+
 
 
 from modules.worker  import FileWorker
@@ -46,8 +46,11 @@ class Alexandria(QMainWindow):
         # Modelo para arquivos do diretório atual (não recursivo)
         self.file_model = QFileSystemModel()
         self.file_model.setFilter(QDir.Files | QDir.NoDotAndDotDot)
-        self.file_model.setNameFilters(FILE_TYPES)
+        
+        self.file_model.setNameFilters(["!*.bib","!*.json"])
         self.file_model.setNameFilterDisables(False)
+        # False, os arquivos que não correspondem aos filtros são completamente ocultos
+        # True, os arquivos não correspondentes seriam desabilitados, mas ainda visíveis
 
         # Modelo para todos os arquivos (recursivo)
         self.all_files_model = QStandardItemModel()

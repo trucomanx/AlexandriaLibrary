@@ -1,14 +1,14 @@
-import os
-import sys
-import signal
-
-import subprocess
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTreeView, QTableView, QAbstractItemView,   
                              QFileSystemModel, QSplitter, QToolBar, QAction, 
                              QMenu, QProgressBar, QVBoxLayout, QWidget, 
                              QHBoxLayout, QLineEdit, QPushButton, QMessageBox)
 from PyQt5.QtCore import QDir, Qt
 from PyQt5.QtGui import QIcon, QStandardItemModel 
+
+import os
+import sys
+import signal
+import subprocess
 
 #BASE_PATH = os.path.expanduser("/media/fernando/INFORMATION/CIENCIA/CIENCIA-BOOKS+NOTES/")
 #BASE_PATH = os.path.expanduser("/mnt/boveda/DATASHEET")

@@ -1,6 +1,6 @@
 # alexandria-library
 
-Program that translate text.
+Program for the pregnancy and order of digital files.
 
 ![logo](https://raw.githubusercontent.com/trucomanx/AlexandriaLibrary/main/src/alexandria_library/icons/logo.png)
 
@@ -15,14 +15,14 @@ To install the package from `PyPI`, follow the instructions below:
 pip install --upgrade alexandria-library
 ```
 
-Execute `which alexandria-library-indicator` to see where it was installed, probably in `/home/USERNAME/.local/bin/alexandria-library-indicator`.
+Execute `which librarian` to see where it was installed, probably in `/home/USERNAME/.local/bin/librarian`.
 
 #### Using
 
-If the program was not added to the Linux start session, then to start, use the command below:
+To start the program, use the command below:
 
 ```bash
-alexandria-library
+librarian
 ```
 
 ## 2. Buy me a coffee

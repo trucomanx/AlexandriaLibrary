@@ -28,7 +28,7 @@ pip install --upgrade alexandria-library
 Using:
 
 ```bash
-alexandria-library-indicator
+librarian
 ```
 
 ## Install from source
@@ -45,7 +45,7 @@ pip install dist/alexandria_library-*.tar.gz
 Using:
 
 ```bash
-alexandria-library-indicator
+librarian
 ```
 
 ## Uninstall

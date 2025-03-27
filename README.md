@@ -1,6 +1,6 @@
 # alexandria-library
 
-Program for the pregnancy and order of digital files.
+Program for the management and organization of digital files.
 
 ![logo](https://raw.githubusercontent.com/trucomanx/AlexandriaLibrary/main/src/alexandria_library/icons/logo.png)
 

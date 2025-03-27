@@ -1,28 +1,42 @@
 import os
+import sys
+import signal
 
 import subprocess
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QTreeView, QListView, 
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTreeView, QTableView, QAbstractItemView,   
                              QFileSystemModel, QSplitter, QToolBar, QAction, 
                              QMenu, QProgressBar, QVBoxLayout, QWidget, 
                              QHBoxLayout, QLineEdit, QPushButton, QMessageBox)
 from PyQt5.QtCore import QDir, Qt
-from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QIcon, QStandardItemModel 
 
-BASE_PATH = os.path.expanduser("/media/fernando/INFORMATION/CIENCIA/CIENCIA-BOOKS+NOTES/")
+#BASE_PATH = os.path.expanduser("/media/fernando/INFORMATION/CIENCIA/CIENCIA-BOOKS+NOTES/")
 #BASE_PATH = os.path.expanduser("/mnt/boveda/DATASHEET")
-#BASE_PATH = os.path.expanduser("~/Alexandria")
+BASE_PATH  = os.path.expanduser("~/Alexandria")
+FILE_TYPES = ["*.pdf","*.ps", "*.txt", "*.md", "*.png", "*.djvu"]
 
-from modules.worker import FileWorker
-from modules.files  import save_file_in
-from modules.files  import open_file_from_index
-from modules.files  import open_folder_from_path
+
+from modules.worker  import FileWorker
+from modules.files   import save_file_in
+from modules.files   import open_file_from_index
+from modules.files   import open_folder_from_path
+from modules.context_menu   import show_context_menu_from_index
+from modules.about_window   import show_about_window
+from modules.search_results import display_search_results
+import about
 
 class Alexandria(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Alexandria")
-        self.setGeometry(100, 100, 800, 600)
+        self.setWindowTitle(about.__program_name__)
+        self.setGeometry(100, 100, 1000, 600)
         self.current_file_model = None
+        
+        # Icon
+        base_dir_path = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(base_dir_path, 'icons', 'logo.png')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
 
         # Configuração dos modelos
         self.dir_model = QFileSystemModel()
@@ -32,7 +46,7 @@ class Alexandria(QMainWindow):
         # Modelo para arquivos do diretório atual (não recursivo)
         self.file_model = QFileSystemModel()
         self.file_model.setFilter(QDir.Files | QDir.NoDotAndDotDot)
-        self.file_model.setNameFilters(["*.pdf","*.ps", "*.txt", "*.md", "*.png", "*.djvu"])
+        self.file_model.setNameFilters(FILE_TYPES)
         self.file_model.setNameFilterDisables(False)
 
         # Modelo para todos os arquivos (recursivo)
@@ -56,16 +70,30 @@ class Alexandria(QMainWindow):
         self.tree_view.setSelectionMode(QTreeView.SingleSelection)
         self.tree_view.selectionModel().selectionChanged.connect(self.on_tree_selection_changed)
 
-        self.list_view = QListView()
-        self.list_view.setModel(self.all_files_model)  # Começa com o modelo vazio
-        self.list_view.doubleClicked.connect(self.open_file)
-        self.list_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.list_view.customContextMenuRequested.connect(self.show_context_menu)
+        self.table_view = QTableView()
+        self.table_view.setModel(self.all_files_model)  # Começa com o modelo vazio
+        
+        # Configurações para tornar a tabela não editável
+        
+        # 1. Desabilita edição direta das células
+        self.table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        # 2. Permite seleção de células/linhas
+        self.table_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        # 3. Habilita seleção de texto para cópia
+        self.table_view.setTextElideMode(Qt.ElideNone)
+        # 4. Permite seleção de múltiplas linhas/células
+        self.table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
+        # 5. Para copiar, você pode adicionar um shortcut de teclado para Ctrl+C
+        self.table_view.installEventFilter(self)
+        
+        self.table_view.doubleClicked.connect(self.open_file)
+        self.table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table_view.customContextMenuRequested.connect(self.show_context_menu)
 
         # Splitter
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(self.tree_view)
-        splitter.addWidget(self.list_view)
+        splitter.addWidget(self.table_view)
         splitter.setSizes([200, 600])
 
         # Filtro de busca
@@ -100,15 +128,38 @@ class Alexandria(QMainWindow):
 
         self.refresh_action = QAction(QIcon.fromTheme('view-refresh'), "Atualizar", self)
         self.refresh_action.triggered.connect(self.refresh)
+        
+        self.about_action = QAction(QIcon.fromTheme('help-about'), "About", self)
+        self.about_action.triggered.connect(self.open_about)
 
     def create_toolbar(self):
         toolbar = QToolBar("Tool bar")
+        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         self.addToolBar(toolbar)
         toolbar.addAction(self.add_file_action)
         toolbar.addAction(self.refresh_action)
+        toolbar.addAction(self.about_action)
 
     def create_statusbar(self):
         self.statusBar().showMessage("Ready")
+
+    def open_about(self):
+        data = {
+            "version": about.__version__,
+            "package": about.__package__,
+            "program_name": about.__program_name__,
+            "author": about.__author__,
+            "email": about.__email__,
+            "description": about.__description__,
+            "url_source": about.__url_source__,
+            "url_funding": about.__url_funding__,
+            "url_bugs": about.__url_bugs__
+        }
+        
+        base_dir_path = os.path.dirname(os.path.abspath(__file__))
+        logo_path = os.path.join(base_dir_path, 'icons', 'logo.png')
+        
+        show_about_window(data, logo_path)
 
     def on_tree_selection_changed(self):
         selected = self.tree_view.selectedIndexes()
@@ -137,31 +188,10 @@ class Alexandria(QMainWindow):
         self.on_tree_selection_changed()
 
     def open_file(self, index):
-        open_file_from_index(self,index)
+        open_file_from_index(self,BASE_PATH,index)
         
     def show_context_menu(self, pos):
-        index = self.list_view.indexAt(pos)
-        if not index.isValid():
-            return
-
-        if self.list_view.model() == self.all_files_model:
-            file_path = self.all_files_model.data(index)
-        else:
-            file_path = self.file_model.filePath(index)
-
-        menu = QMenu()
-
-        open_folder_action = QAction("Abrir Pasta", self)
-        open_folder_action.triggered.connect(lambda: open_folder_from_path(file_path))
-        menu.addAction(open_folder_action)
-
-        bib_file = file_path + '.bib'
-        if os.path.exists(bib_file):
-            open_bib_action = QAction("Abrir Arquivo .bib", self)
-            open_bib_action.triggered.connect(lambda: self.open_file(bib_file))
-            menu.addAction(open_bib_action)
-
-        menu.exec_(self.list_view.viewport().mapToGlobal(pos))
+        show_context_menu_from_index(self, BASE_PATH, pos)
 
     def start_search(self):
         search_text = self.search_box.text().strip()
@@ -186,19 +216,7 @@ class Alexandria(QMainWindow):
         self.progress_bar.setValue(value)
 
     def display_search_results(self, file_list):
-        self.progress_bar.setValue(0) #self.progress_bar.setVisible(False)
-        
-        self.all_files_model.clear()
-        self.all_files_model.setHorizontalHeaderLabels(["Arquives"])
-        
-        for file_path in file_list:
-            #relative_path = os.path.relpath(file_path, BASE_PATH)
-            #item = QStandardItem(relative_path)
-            item = QStandardItem(file_path)
-            self.all_files_model.appendRow(item)
-        
-        self.list_view.setModel(self.all_files_model)
-        self.statusBar().showMessage(f"{len(file_list)} files found")
+        display_search_results(self, BASE_PATH, file_list)
 
     def clear_search(self):
         self.search_box.clear()
@@ -212,10 +230,10 @@ class Alexandria(QMainWindow):
         event.accept()
 
 if __name__ == "__main__":
-    import sys
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     
     if not os.path.exists(BASE_PATH):
-        os.makedirs(BASE_PATH)
+        os.makedirs(os.path.join(BASE_PATH,"Library"))
     
     app = QApplication(sys.argv)
     window = Alexandria()

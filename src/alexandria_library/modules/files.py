@@ -4,6 +4,11 @@ import os
 import subprocess
 import sys
 
+def read_file_from_path(file_path):
+    """Lê o conteúdo completo do arquivo usando gerenciador de contexto."""
+    with open(file_path, 'r', encoding='utf-8') as arquivo:
+        conteudo = arquivo.read()
+    return conteudo
 
 def open_folder_from_path(file_path):
     folder_path = os.path.dirname(file_path)
@@ -14,27 +19,34 @@ def open_folder_from_path(file_path):
             opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
             subprocess.call([opener, folder_path])
 
-def open_file_from_index(parent,index):
-        if parent.list_view.model() == parent.all_files_model:
-            file_path = parent.all_files_model.data(index)
+def open_file_from_path(file_path):
+    if os.path.exists(file_path):
+        if os.name == 'nt':
+            os.startfile(file_path)
         else:
-            file_path = parent.file_model.filePath(index)
-            
-        if os.path.exists(file_path):
-            if os.name == 'nt':
-                os.startfile(file_path)
-            else:
-                opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
-                subprocess.call([opener, file_path])
+            opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
+            subprocess.call([opener, file_path])
 
-def save_file_in(parent,BASE_PATH,func_refresh):
+def open_file_from_index(parent,base_path,index):
+
+        row    = index.row()
+        model = parent.table_view.model()
+
+        filename = model.item(row, 0).text()
+        rel_dir  = model.item(row, 1).text()
+
+        file_path = os.path.join(base_path,rel_dir,filename)
+            
+        open_file_from_path(file_path)
+
+def save_file_in(parent,base_path,func_refresh):
     file_dialog = QFileDialog()
     file_path, _ = file_dialog.getOpenFileName(parent, "Salvar Arquivo")
 
     if file_path:
         try:
             dir_path = file_dialog.getExistingDirectory(parent, "Save in?",
-                                   BASE_PATH,
+                                   base_path,
                                    QFileDialog.ShowDirsOnly)
             shutil.copy2(file_path, dir_path)
             func_refresh()

@@ -22,17 +22,8 @@ Execute `which alexandria-library-indicator` to see where it was installed, prob
 If the program was not added to the Linux start session, then to start, use the command below:
 
 ```bash
-alexandria-library-indicator
+alexandria-library
 ```
-
-
-### 1.2. Install from PyPI and add to Linux start session
-Install `alexandria-library` from `pypi` and add the program to the bar indicator on Linux startup session.
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/trucomanx/AlexandriaLibrary/main/install_linux_indicator_session.sh | sh
-```
-
 
 ## 2. Buy me a coffee
 

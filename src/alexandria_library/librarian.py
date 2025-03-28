@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTreeView, QTableView, QAbstractItemView,   
-                             QFileSystemModel, QSplitter, QToolBar, QAction, 
+                             QFileSystemModel, QSplitter, QToolBar, QAction, QLabel, QFileDialog, 
                              QMenu, QProgressBar, QVBoxLayout, QWidget, 
                              QHBoxLayout, QLineEdit, QPushButton, QMessageBox)
 from PyQt5.QtCore import QDir, Qt
@@ -22,14 +22,14 @@ from modules.files   import open_file_from_index
 from modules.files   import open_folder_from_path
 from modules.context_menu   import show_context_menu_from_index
 from modules.about_window   import show_about_window
-from modules.search_results import display_search_results
+from modules.search_results import display_search_results_from_file_list
 import about
 
 class Alexandria(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(about.__program_name__)
-        self.setGeometry(100, 100, 1000, 600)
+        self.setGeometry(50, 100, 1000, 600)
         self.current_file_model = None
         
         # Icon
@@ -99,12 +99,24 @@ class Alexandria(QMainWindow):
         splitter.addWidget(self.table_view)
         splitter.setSizes([200, 600])
 
+        # base path
+        self.basepath_box = QLineEdit()
+        self.basepath_box.setText(BASE_PATH)
+        change_basepath_button = QPushButton("Select path")
+        change_basepath_button.clicked.connect(self.select_base_path)
+        
+        basepath_layout = QHBoxLayout()
+        basepath_layout.addWidget(QLabel("Base path:"))
+        basepath_layout.addWidget(self.basepath_box)
+        basepath_layout.addWidget(change_basepath_button)
+
         # Filtro de busca
         self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText("Buscar em nomes e arquivos .bib...")
-        search_button = QPushButton("Buscar")
+        self.search_box.setPlaceholderText("Search in file names and *.bib files...")
+        self.search_box.returnPressed.connect(self.start_search)
+        search_button = QPushButton("Search")
         search_button.clicked.connect(self.start_search)
-        clear_button = QPushButton("Limpar")
+        clear_button = QPushButton("Clean")
         clear_button.clicked.connect(self.clear_search)
 
         search_layout = QHBoxLayout()
@@ -117,6 +129,7 @@ class Alexandria(QMainWindow):
 
         # Layout principal
         main_layout = QVBoxLayout()
+        main_layout.addLayout(basepath_layout)
         main_layout.addWidget(splitter)
         main_layout.addLayout(search_layout)
         main_layout.addWidget(self.progress_bar)
@@ -164,13 +177,16 @@ class Alexandria(QMainWindow):
         
         show_about_window(data, logo_path)
 
+
     def on_tree_selection_changed(self):
+                
         selected = self.tree_view.selectedIndexes()
         if selected:
             index = selected[0]
             path = self.dir_model.filePath(index)
             self.load_all_files_from_directory(path)
 
+   
     def load_all_files_from_directory(self, directory):
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
@@ -189,6 +205,33 @@ class Alexandria(QMainWindow):
         self.dir_model.setRootPath(BASE_PATH)
         self.tree_view.setRootIndex(self.dir_model.index(BASE_PATH))
         self.on_tree_selection_changed()
+       
+
+    def select_base_path(self):
+        global BASE_PATH
+        
+        new_path = QFileDialog.getExistingDirectory(
+            self, 
+            "Select or create a Diretory", 
+            BASE_PATH,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog  # Importante para ter mais opções
+        )
+
+        if new_path:
+            self.tree_view.selectionModel().clearSelection()
+            
+            BASE_PATH = str(new_path)
+            
+            self.basepath_box.setText(BASE_PATH)
+
+            self.dir_model.setRootPath(BASE_PATH)
+            self.tree_view.setModel(self.dir_model)
+            self.tree_view.setRootIndex(self.dir_model.index(BASE_PATH))
+            
+            model = QStandardItemModel()  
+            model.clear()  
+            self.table_view.setModel(model)  
+        
 
     def open_file(self, index):
         open_file_from_index(self,BASE_PATH,index)
@@ -219,7 +262,7 @@ class Alexandria(QMainWindow):
         self.progress_bar.setValue(value)
 
     def display_search_results(self, file_list):
-        display_search_results(self, BASE_PATH, file_list)
+        display_search_results_from_file_list(self, BASE_PATH, file_list)
 
     def clear_search(self):
         self.search_box.clear()

@@ -102,6 +102,7 @@ class Alexandria(QMainWindow):
         # base path
         self.basepath_box = QLineEdit()
         self.basepath_box.setText(BASE_PATH)
+        self.basepath_box.returnPressed.connect(self.basepath_box_pressed)
         change_basepath_button = QPushButton("Select path")
         change_basepath_button.clicked.connect(self.select_base_path)
         
@@ -206,18 +207,8 @@ class Alexandria(QMainWindow):
         self.tree_view.setRootIndex(self.dir_model.index(BASE_PATH))
         self.on_tree_selection_changed()
        
-
-    def select_base_path(self):
-        global BASE_PATH
-        
-        new_path = QFileDialog.getExistingDirectory(
-            self, 
-            "Select or create a Diretory", 
-            BASE_PATH,
-            QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog  # Importante para ter mais opções
-        )
-
-        if new_path:
+    def change_base_path(self,new_path):
+        if os.path.exists(new_path) and os.path.isdir(new_path):
             self.tree_view.selectionModel().clearSelection()
             
             BASE_PATH = str(new_path)
@@ -230,7 +221,25 @@ class Alexandria(QMainWindow):
             
             model = QStandardItemModel()  
             model.clear()  
-            self.table_view.setModel(model)  
+            self.table_view.setModel(model) 
+
+    def basepath_box_pressed(self):
+        new_path = self.basepath_box.text()
+        self.change_base_path(new_path)
+
+    def select_base_path(self):
+        global BASE_PATH
+        
+        new_path = QFileDialog.getExistingDirectory(
+            self, 
+            "Select or create a Diretory", 
+            BASE_PATH,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog  # Importante para ter mais opções
+        )
+
+        if new_path:
+            self.change_base_path(new_path)
+ 
         
 
     def open_file(self, index):

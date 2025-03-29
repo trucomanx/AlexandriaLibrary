@@ -1,7 +1,9 @@
+from PyQt5.QtWidgets import QApplication, QMenu, QAction
+from PyQt5.QtGui import QIcon
+import sys
 import os 
 import json
-from PyQt5.QtWidgets import QMenu, QAction
-from PyQt5.QtGui import QIcon
+
 
 from .files   import open_folder_from_path
 from .files   import open_file_from_path
@@ -55,6 +57,11 @@ def save_bib_file(  parent,
             arquivo.write(res)
             parent.refresh()
 
+def copy_to_clipboard(text):
+    clipboard = QApplication.clipboard()
+    clipboard.setText(text)
+    # Não use app.exec_() se isto for parte de um script não-GUI
+    
 def show_context_menu_from_index(parent, base_path, pos):
     index = parent.table_view.indexAt(pos)
     if not index.isValid():
@@ -74,6 +81,11 @@ def show_context_menu_from_index(parent, base_path, pos):
     open_folder_action.setIcon(QIcon.fromTheme("folder-open"))
     open_folder_action.triggered.connect(lambda: open_folder_from_path(file_path))
     menu.addAction(open_folder_action)
+    
+    copy_path_action = QAction("Copy file path", parent)
+    copy_path_action.setIcon(QIcon.fromTheme("edit-copy"))
+    copy_path_action.triggered.connect(lambda: copy_to_clipboard(file_path))
+    menu.addAction(copy_path_action)
     
     get_title_action = QAction("Get title", parent)
     get_title_action.setIcon(QIcon.fromTheme("text-x-generic-template"))

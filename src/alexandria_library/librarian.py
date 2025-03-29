@@ -188,6 +188,7 @@ class Alexandria(QMainWindow):
         if selected:
             index = selected[0]
             path = self.dir_model.filePath(index)
+            
             self.load_all_files_from_directory(path)
 
    
@@ -211,8 +212,9 @@ class Alexandria(QMainWindow):
         self.on_tree_selection_changed()
        
     def change_base_path(self,new_path):
+        global BASE_PATH
         if os.path.exists(new_path) and os.path.isdir(new_path):
-            self.tree_view.selectionModel().clearSelection()
+            #self.tree_view.selectionModel().clearSelection()
             
             BASE_PATH = str(new_path)
             
@@ -231,7 +233,6 @@ class Alexandria(QMainWindow):
         self.change_base_path(new_path)
 
     def select_base_path(self):
-        global BASE_PATH
         
         new_path = QFileDialog.getExistingDirectory(
             self, 

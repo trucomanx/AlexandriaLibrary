@@ -77,7 +77,7 @@ class FileWorker(QThread):
         # Primeiro contamos o total de arquivos para a barra de progresso
         for root, _, files in os.walk(self.root_dir):
             for file in files:
-                if not file.endswith('.bib'):
+                if not file.endswith('.bib') and not file.endswith('.json'):
                     total_files += 1
 
         if total_files == 0:
@@ -93,7 +93,7 @@ class FileWorker(QThread):
                 if self.canceled:
                     break
 
-                if file.endswith('.bib'):
+                if file.endswith('.bib') or file.endswith('.json'):
                     continue
 
                 file_path = os.path.join(root, file)
@@ -131,7 +131,7 @@ class FileWorker(QThread):
         # Contagem total de arquivos para progresso
         for root, _, files in os.walk(self.root_dir):
             for file in files:
-                if not file.endswith('.bib'):
+                if not file.endswith('.bib') and not file.endswith('.json'):
                     total_files += 1
 
         if total_files == 0:
@@ -147,7 +147,7 @@ class FileWorker(QThread):
                 if self.canceled:
                     break
 
-                if file.endswith('.bib'):
+                if file.endswith('.bib') or file.endswith('.json'):
                     continue
 
                 file_path = os.path.join(root, file)

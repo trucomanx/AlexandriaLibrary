@@ -9,6 +9,7 @@ import os
 import sys
 import signal
 import subprocess
+import platform
 
 #BASE_PATH = os.path.expanduser("/media/fernando/INFORMATION/CIENCIA/CIENCIA-BOOKS+NOTES/")
 #BASE_PATH = os.path.expanduser("/mnt/boveda/DATASHEET")
@@ -25,11 +26,13 @@ from modules.about_window   import show_about_window
 from modules.search_results import display_search_results_from_file_list
 import about
 
+
+
 class Alexandria(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(about.__program_name__)
-        self.setGeometry(50, 100, 1000, 600)
+        self.setGeometry(50, 100, 1100, 600)
         self.current_file_model = None
         
         # Icon
@@ -277,6 +280,19 @@ class Alexandria(QMainWindow):
         self.search_box.clear()
         self.progress_bar.setValue(0) #self.progress_bar.setVisible(False)
         self.on_tree_selection_changed()
+
+    def show_notification_message(self, title, message):
+        """Show a system notification"""
+        if platform.system() == "Linux":
+            msg = message.replace("\""," ")
+            os.system(f'notify-send "⚠️ {title} ⚠️" "{msg}"')
+        else:
+            app = QApplication.instance()
+            
+            tray_icon = app.property("tray_icon")
+            
+            if tray_icon:
+                tray_icon.showMessage("⚠️ " + title + " ⚠️", message, QSystemTrayIcon.Information, 3000)
 
     def closeEvent(self, event):
         if hasattr(self, 'worker') and self.worker.isRunning():

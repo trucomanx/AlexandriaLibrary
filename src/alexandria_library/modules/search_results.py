@@ -1,4 +1,5 @@
 import os
+import json
 from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtGui import QStandardItem
 
@@ -8,7 +9,7 @@ def display_search_results_from_file_list(parent, base_path, file_list):
     # Clear the model
     parent.all_files_model.clear()
     
-    parent.all_files_model.setHorizontalHeaderLabels(["Arquives","Directories","bib"])
+    parent.all_files_model.setHorizontalHeaderLabels(["Arquives","Directories","bib","ocr"])
     
     parent.progress_bar.setValue(0)
     L = len(file_list)
@@ -25,7 +26,19 @@ def display_search_results_from_file_list(parent, base_path, file_list):
             item3 = QStandardItem("✅")
         else:
             item3 = QStandardItem("❌")
-        parent.all_files_model.appendRow([item1,item2,item3])
+            
+        item4 = QStandardItem("")
+        if os.path.exists(file_path+'.json'):
+            with open(file_path+'.json', 'r', encoding='utf-8') as f:
+                dados = json.load(f)
+                ocr = dados.get("ocr",None)
+                if ocr==True:
+                    item4 = QStandardItem("✅")
+                elif ocr==False:
+                    item4 = QStandardItem("❌")
+            
+        
+        parent.all_files_model.appendRow([item1,item2,item3,item4])
         
         parent.progress_bar.setValue(int(((l+1)*100.0)/L))
     parent.progress_bar.setValue(0)
@@ -46,7 +59,8 @@ def display_search_results_from_file_list(parent, base_path, file_list):
     
     # Definir largura inicial da segunda coluna
     header.resizeSection(0, 500)  # Largura inicial de 150 pixels
-    header.resizeSection(1, 150)  # Largura inicial de 150 pixels
-    header.resizeSection(2, 30)  # Largura inicial de 30 pixels
+    header.resizeSection(1, 150)  
+    header.resizeSection(2, 30)  
+    header.resizeSection(3, 30)  
             
     parent.statusBar().showMessage(f"{len(file_list)} files found")

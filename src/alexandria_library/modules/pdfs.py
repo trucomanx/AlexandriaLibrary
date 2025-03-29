@@ -2,6 +2,25 @@ import PyPDF2
 # pip install PyPDF2
 from typing import Dict, Any
 
+from PyPDF2 import PdfReader
+
+def is_text_selectable(filepath, max_pages_check=5):
+    has_text = False
+    try:
+        reader = PdfReader(filepath)
+        # Verifica apenas as primeiras 'max_pages_check' páginas
+        for i, page in enumerate(reader.pages):
+            if i >= max_pages_check:
+                break
+            text = page.extract_text()
+            if text and text.strip():  # Se extrair texto não vazio
+                has_text = True
+                break
+    except Exception as e:
+        print(f"Erro ao processar PDF: {e}")
+        return False
+    return has_text
+
 def is_pdf(filepath):
     try:
         with open(filepath, 'rb') as file:

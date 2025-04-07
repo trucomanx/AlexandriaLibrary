@@ -17,16 +17,17 @@ BASE_PATH  = os.path.expanduser("~/Alexandria")
 
 
 
-from modules.worker  import FileWorker
-from modules.files   import save_file_in
-from modules.files   import open_file_from_index
-from modules.files   import open_folder_from_path
-from modules.context_menu   import show_context_menu_from_index
-from modules.about_window   import show_about_window
-from modules.search_results import display_search_results_from_file_list
-import about
+from alexandria_library.modules.worker  import FileWorker
+from alexandria_library.modules.files   import save_file_in
+from alexandria_library.modules.files   import open_file_from_index
+from alexandria_library.modules.files   import open_folder_from_path
+from alexandria_library.modules.context_menu   import show_context_menu_from_index
+from alexandria_library.modules.about_window   import show_about_window
+from alexandria_library.modules.search_results import display_search_results_from_file_list
+import alexandria_library.about as about
 
-
+if not os.path.exists(BASE_PATH):
+    os.makedirs(os.path.join(BASE_PATH,"Library"))
 
 class Alexandria(QMainWindow):
     def __init__(self):
@@ -301,13 +302,13 @@ class Alexandria(QMainWindow):
             self.worker.wait()
         event.accept()
 
-if __name__ == "__main__":
+def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    
-    if not os.path.exists(BASE_PATH):
-        os.makedirs(os.path.join(BASE_PATH,"Library"))
-    
     app = QApplication(sys.argv)
+    app.setApplicationName("alexandria_library_librarian") # xprop WM_CLASS # *.desktop -> StartupWMClass    
     window = Alexandria()
     window.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()

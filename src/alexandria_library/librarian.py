@@ -24,6 +24,7 @@ from alexandria_library.modules.files   import open_folder_from_path
 from alexandria_library.modules.context_menu   import show_context_menu_from_index
 from alexandria_library.modules.about_window   import show_about_window
 from alexandria_library.modules.search_results import display_search_results_from_file_list
+from alexandria_library.desktop import create_desktop_file, create_desktop_directory, create_desktop_menu
 import alexandria_library.about as about
 
 if not os.path.exists(BASE_PATH):
@@ -92,6 +93,8 @@ class Alexandria(QMainWindow):
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
         # 5. Para copiar, você pode adicionar um shortcut de teclado para Ctrl+C
         self.table_view.installEventFilter(self)
+        # 6, Sorting
+        self.table_view.setSortingEnabled(True)
         
         self.table_view.doubleClicked.connect(self.open_file)
         self.table_view.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -184,7 +187,7 @@ class Alexandria(QMainWindow):
 
 
     def on_tree_selection_changed(self):
-                
+        
         selected = self.tree_view.selectedIndexes()
         if selected:
             index = selected[0]
@@ -194,6 +197,8 @@ class Alexandria(QMainWindow):
 
    
     def load_all_files_from_directory(self, directory):
+        self.table_view.setEnabled(False)
+        
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
         
@@ -277,6 +282,7 @@ class Alexandria(QMainWindow):
 
     def display_search_results(self, file_list):
         display_search_results_from_file_list(self, BASE_PATH, file_list)
+        self.table_view.setEnabled(True)
 
     def clear_search(self):
         self.search_box.clear()
@@ -304,8 +310,25 @@ class Alexandria(QMainWindow):
 
 def main():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
+    
+    create_desktop_directory()    
+    create_desktop_menu()
+    create_desktop_file('~/.local/share/applications')
+    
+    for n in range(len(sys.argv)):
+        if sys.argv[n] == "--autostart":
+            create_desktop_directory(overwrite = True)
+            create_desktop_menu(overwrite = True)
+            create_desktop_file('~/.config/autostart', overwrite=True)
+            return
+        if sys.argv[n] == "--applications":
+            create_desktop_directory(overwrite = True)
+            create_desktop_menu(overwrite = True)
+            create_desktop_file('~/.local/share/applications', overwrite=True)
+            return
+    
     app = QApplication(sys.argv)
-    app.setApplicationName("alexandria_library_librarian") # xprop WM_CLASS # *.desktop -> StartupWMClass    
+    app.setApplicationName(about.__package__) # xprop WM_CLASS # *.desktop -> StartupWMClass    
     window = Alexandria()
     window.show()
     sys.exit(app.exec_())

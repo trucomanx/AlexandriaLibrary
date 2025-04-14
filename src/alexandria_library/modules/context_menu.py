@@ -138,16 +138,11 @@ def show_context_menu_from_index(parent, base_path, pos):
         json_file = file_path + '.json'
         if os.path.exists(file_path):
             data = dict()
-            check = False
             if os.path.exists(json_file):
                 with open(json_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    if data.get("ocr") not in (True, False):
-                        check = True
-            else:
-                check = True
                 
-            if check and is_pdf(file_path):    
+            if is_pdf(file_path):    
                 check_ocr_action = QAction("Verify OCR", parent)
                 check_ocr_action.setIcon(QIcon.fromTheme("insert-text"))
                 check_ocr_action.triggered.connect(lambda: check_ocr_pdf(   parent, 

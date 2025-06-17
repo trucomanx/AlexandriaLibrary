@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QTreeView, QTableView, Q
 from PyQt5.QtCore import QDir, Qt
 from PyQt5.QtGui import QIcon, QStandardItemModel 
 
+from alexandria_library.modules.proxy import CaseInsensitiveSortModel
+
 import os
 import sys
 import signal
@@ -79,7 +81,9 @@ class Alexandria(QMainWindow):
         self.tree_view.selectionModel().selectionChanged.connect(self.on_tree_selection_changed)
 
         self.table_view = QTableView()
-        self.table_view.setModel(self.all_files_model)  # Começa com o modelo vazio
+        self.proxy_model = CaseInsensitiveSortModel()
+        self.proxy_model.setSourceModel(self.all_files_model)
+        self.table_view.setModel(self.proxy_model)  # Começa com o modelo vazio
         
         # Configurações para tornar a tabela não editável
         
@@ -232,7 +236,9 @@ class Alexandria(QMainWindow):
             
             model = QStandardItemModel()  
             model.clear()  
-            self.table_view.setModel(model) 
+            self.proxy_model = CaseInsensitiveSortModel()
+            self.proxy_model.setSourceModel(model)
+            self.table_view.setModel(self.proxy_model) 
 
     def basepath_box_pressed(self):
         new_path = self.basepath_box.text()

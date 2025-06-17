@@ -3,6 +3,8 @@ import json
 from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtGui import QStandardItem
 
+from alexandria_library.modules.proxy import CaseInsensitiveSortModel
+
 def display_search_results_from_file_list(parent, base_path, file_list):
 
     
@@ -44,7 +46,9 @@ def display_search_results_from_file_list(parent, base_path, file_list):
     parent.progress_bar.setValue(0)
     
     # Configurar a view para mostrar as colunas
-    parent.table_view.setModel(parent.all_files_model)
+    parent.proxy_model = CaseInsensitiveSortModel()
+    parent.proxy_model.setSourceModel(parent.all_files_model)
+    parent.table_view.setModel(parent.proxy_model)
     
     # Configurações de redimensionamento de colunas
     header = parent.table_view.horizontalHeader()

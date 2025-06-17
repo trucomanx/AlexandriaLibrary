@@ -106,8 +106,15 @@ def show_context_menu_from_index(parent, base_path, pos):
         row   = index.row()
         model = parent.table_view.model()
 
-        filename = model.item(row, 0).text()
-        rel_dir  = model.item(row, 1).text()
+        proxy_index = model.index(row, 0)
+        source_index = model.mapToSource(proxy_index)
+        filename = model.sourceModel().itemFromIndex(source_index).text()
+        
+        
+        proxy_index = model.index(row, 1)
+        source_index = model.mapToSource(proxy_index)
+        rel_dir = model.sourceModel().itemFromIndex(source_index).text()
+
 
         file_path = os.path.join(base_path,rel_dir,filename)
         

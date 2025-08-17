@@ -43,9 +43,11 @@ classifiers = [
 ]
 license = "GPL-3.0-only WITH Classpath-Exception-2.0 OR BSD-3-Clause"
 license-files = ["LICENSE"]
-keywords = ["writing", "translate"]
+keywords = ["library", "management", "organizer"]
 dependencies = [
-    "PyQt5"
+    "PyQt5",
+    "PyPDF2",
+    "scholarly"
 ]
 
 [project.urls]

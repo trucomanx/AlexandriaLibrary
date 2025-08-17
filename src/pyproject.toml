@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "alexandria_library"
 version = "0.1.0"
-description = "Program to ..."
+description = "Program for the management and organization of digital files."
 readme = "README.md"
 authors = [{name = "Fernando Pujaico Rivera", email = "fernando.pujaico.rivera@gmail.com"}]
 maintainers = [{name = "Fernando Pujaico Rivera", email = "fernando.pujaico.rivera@gmail.com"}]
@@ -16,9 +16,11 @@ classifiers = [
 ]
 license = "GPL-3.0-only WITH Classpath-Exception-2.0 OR BSD-3-Clause"
 license-files = ["LICENSE"]
-keywords = ["writing", "translate"]
+keywords = ["library", "management", "organizer"]
 dependencies = [
-    "PyQt5"
+    "PyQt5",
+    "PyPDF2",
+    "scholarly"
 ]
 
 [project.urls]

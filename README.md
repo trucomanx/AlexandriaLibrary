@@ -2,7 +2,7 @@
 
 Program for the management and organization of digital files.
 
-![logo](https://raw.githubusercontent.com/trucomanx/AlexandriaLibrary/main/src/alexandria_library/icons/logo.png)
+![logo](https://raw.githubusercontent.com/trucomanx/AlexandriaLibrary/main/screenshot.png)
 
 ## 1. Installing
 

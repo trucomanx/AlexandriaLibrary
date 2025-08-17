@@ -1,6 +1,6 @@
 # about.py
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __package__ = "alexandria_library"
 __program_name__ = "alexandria-library"
 __author__ = "Fernando Pujaico Rivera" 

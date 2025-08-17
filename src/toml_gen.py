@@ -7,7 +7,7 @@ import sys
 here = pathlib.Path(__file__).parent.resolve()
 sys.path.insert(0, str(here))
 
-from {MODULE_NAME}.about import (
+from alexandria_library.about import (
     __version__,
     __package__,
     __program_name__,

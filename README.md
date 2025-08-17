@@ -8,7 +8,7 @@ Program for the management and organization of digital files.
 
 ### 1.1. Install from PyPI
 
-To install the package from `PyPI`, follow the instructions below:
+To install the package from [PyPI](https://pypi.org/project/alexandria_library/), follow the instructions below:
 
 
 ```bash

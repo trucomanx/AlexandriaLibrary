@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTreeView, QTableView, QAbstractItemView,   
                              QFileSystemModel, QSplitter, QToolBar, QAction, QLabel, QFileDialog, 
-                             QMenu, QProgressBar, QVBoxLayout, QWidget, 
+                             QMenu, QProgressBar, QVBoxLayout, QWidget, QSizePolicy, 
                              QHBoxLayout, QLineEdit, QPushButton, QMessageBox)
-from PyQt5.QtCore import QDir, Qt
-from PyQt5.QtGui import QIcon, QStandardItemModel 
+from PyQt5.QtCore import QDir, Qt, QUrl
+from PyQt5.QtGui import QIcon, QStandardItemModel, QDesktopServices
 
 from alexandria_library.modules.proxy import CaseInsensitiveSortModel
 
@@ -64,7 +64,6 @@ class Alexandria(QMainWindow):
 
         # Configuração da interface
         self.init_ui()
-        self.create_actions()
         self.create_toolbar()
         self.create_statusbar()
 
@@ -150,23 +149,44 @@ class Alexandria(QMainWindow):
         container.setLayout(main_layout)
         self.setCentralWidget(container)
 
-    def create_actions(self):
-        self.add_file_action = QAction(QIcon.fromTheme('document-new'), "Adicionar Arquivo", self)
-        self.add_file_action.triggered.connect(self.add_file)
-
-        self.refresh_action = QAction(QIcon.fromTheme('view-refresh'), "Atualizar", self)
-        self.refresh_action.triggered.connect(self.refresh)
+    def create_toolbar(self):
+        self.toolbar = QToolBar("Tool bar")
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.addToolBar(self.toolbar)
         
+        #
+        self.add_file_action = QAction(QIcon.fromTheme('edit-copy'), "Add to Lib.", self)
+        self.add_file_action.setToolTip("Copy file to some path in the library directory.")
+        self.add_file_action.triggered.connect(self.add_file)
+        self.toolbar.addAction(self.add_file_action)
+        
+        #
+        self.refresh_action = QAction(QIcon.fromTheme('view-refresh'), "Refresh", self)
+        self.refresh_action.triggered.connect(self.refresh)
+        self.refresh_action.setToolTip("Refresh the information of all files in the library directory.")
+        self.toolbar.addAction(self.refresh_action)
+
+        # Adicionar o espaçador
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.toolbar.addWidget(spacer)
+        
+        self.coffee_action = QAction("Coffee", self)
+        self.coffee_action.setIcon(QIcon.fromTheme("emblem-favorite"))
+        self.coffee_action.setToolTip("Buy me a coffee (TrucomanX)")
+        self.coffee_action.triggered.connect(self.buy_me_a_coffee)
+        self.toolbar.addAction(self.coffee_action)
+        
+        #
         self.about_action = QAction(QIcon.fromTheme('help-about'), "About", self)
         self.about_action.triggered.connect(self.open_about)
+        self.about_action.setToolTip("Show the information of program.")
+        self.toolbar.addAction(self.about_action)
+        
 
-    def create_toolbar(self):
-        toolbar = QToolBar("Tool bar")
-        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.addToolBar(toolbar)
-        toolbar.addAction(self.add_file_action)
-        toolbar.addAction(self.refresh_action)
-        toolbar.addAction(self.about_action)
+    def buy_me_a_coffee(self):
+        self.status_bar.showMessage("Buy me a coffee in https://ko-fi.com/trucomanx")
+        QDesktopServices.openUrl(QUrl("https://ko-fi.com/trucomanx"))    
 
     def create_statusbar(self):
         self.statusBar().showMessage("Ready")
@@ -180,6 +200,7 @@ class Alexandria(QMainWindow):
             "email": about.__email__,
             "description": about.__description__,
             "url_source": about.__url_source__,
+            "url_doc": about.__url_doc__,
             "url_funding": about.__url_funding__,
             "url_bugs": about.__url_bugs__
         }

@@ -13,7 +13,7 @@ from .message import show_message
 from .pdfs    import is_pdf
 from .pdfs    import get_metadata_pdf
 from .pdfs    import is_text_selectable
-from .bibtex  import get_bibtex_from_scholar
+from .bibtex  import get_bibtex_from_books
 
 
 def generate_worldcat_search_link(book_title, offset=1):
@@ -73,7 +73,7 @@ def search_bib_data(parent,
                         show_close_button=True)
     if res!='':
         parent.show_notification_message("Sending consult","Please wait...")
-        bib_str = get_bibtex_from_scholar(res)
+        bib_str = get_bibtex_from_books(res)
         
         save_bib_file(  parent,
                         bib_file,
@@ -159,9 +159,22 @@ def show_context_menu_from_index(parent, base_path, pos):
                 menu.addAction(check_ocr_action)
         
         bib_file = file_path + '.bib'
+
+        search_bib_action = QAction("Search bib data", parent)
+        search_bib_action.setIcon(QIcon.fromTheme("system-search"))
+        search_bib_action.triggered.connect(lambda: search_bib_data(parent,
+                                                                    bib_file,
+                                                                    file_path, 
+                                                                    width=600, 
+                                                                    height=300, 
+                                                                    read_only=False, 
+                                                                    title="Info of file"))
+        menu.addAction(search_bib_action)
+
+        bib_str = ""
         if os.path.exists(bib_file) and os.path.exists(file_path):
             bib_str = read_file_from_path(bib_file)
-            open_bib_action = QAction("Open bib file", parent)
+            open_bib_action = QAction("Show bib file", parent)
             open_bib_action.setIcon(QIcon.fromTheme("text-x-generic"))
             open_bib_action.triggered.connect(lambda: show_message( bib_str, 
                                                                     width=600, 
@@ -169,27 +182,16 @@ def show_context_menu_from_index(parent, base_path, pos):
                                                                     read_only=False, 
                                                                     title="Bib file"))
             menu.addAction(open_bib_action)
-        else:
-            search_bib_action = QAction("Search bib data", parent)
-            search_bib_action.setIcon(QIcon.fromTheme("system-search"))
-            search_bib_action.triggered.connect(lambda: search_bib_data(parent,
-                                                                        bib_file,
-                                                                        file_path, 
-                                                                        width=600, 
-                                                                        height=300, 
-                                                                        read_only=False, 
-                                                                        title="Info of file"))
-            menu.addAction(search_bib_action)
-            
-            create_bib_action = QAction("Create bib file", parent)
-            create_bib_action.setIcon(QIcon.fromTheme("text-x-generic"))
-            create_bib_action.triggered.connect(lambda: save_bib_file(  parent,
-                                                                        bib_file,
-                                                                        "", 
-                                                                        width=600, 
-                                                                        height=300, 
-                                                                        read_only=False, 
-                                                                        title="Bib file"))
-            menu.addAction(create_bib_action)
+
+        create_bib_action = QAction("Create/Edit bib file", parent)
+        create_bib_action.setIcon(QIcon.fromTheme("text-x-generic"))
+        create_bib_action.triggered.connect(lambda: save_bib_file(  parent,
+                                                                    bib_file,
+                                                                    bib_str, 
+                                                                    width=600, 
+                                                                    height=300, 
+                                                                    read_only=False, 
+                                                                    title="Bib file"))
+        menu.addAction(create_bib_action)
 
         menu.exec_(parent.table_view.viewport().mapToGlobal(pos))

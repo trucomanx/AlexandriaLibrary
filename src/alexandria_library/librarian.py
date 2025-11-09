@@ -1,3 +1,9 @@
+import os
+import sys
+import signal
+import subprocess
+import platform
+
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTreeView, QTableView, QAbstractItemView,   
                              QFileSystemModel, QSplitter, QToolBar, QAction, QLabel, QFileDialog, 
                              QMenu, QProgressBar, QVBoxLayout, QWidget, QSizePolicy, 
@@ -6,19 +12,6 @@ from PyQt5.QtCore import QDir, Qt, QUrl
 from PyQt5.QtGui import QIcon, QStandardItemModel, QDesktopServices
 
 from alexandria_library.modules.proxy import CaseInsensitiveSortModel
-
-import os
-import sys
-import signal
-import subprocess
-import platform
-
-#BASE_PATH = os.path.expanduser("/media/fernando/INFORMATION/CIENCIA/CIENCIA-BOOKS+NOTES/")
-#BASE_PATH = os.path.expanduser("/mnt/boveda/DATASHEET")
-BASE_PATH  = os.path.expanduser("~/Alexandria")
-
-
-
 from alexandria_library.modules.worker  import FileWorker
 from alexandria_library.modules.files   import save_file_in
 from alexandria_library.modules.files   import open_file_from_index
@@ -27,10 +20,42 @@ from alexandria_library.modules.context_menu   import show_context_menu_from_ind
 from alexandria_library.modules.about_window   import show_about_window
 from alexandria_library.modules.search_results import display_search_results_from_file_list
 from alexandria_library.desktop import create_desktop_file, create_desktop_directory, create_desktop_menu
-import alexandria_library.about as about
 
-if not os.path.exists(BASE_PATH):
-    os.makedirs(os.path.join(BASE_PATH,"Library"))
+import alexandria_library.about as about
+import alexandria_library.modules.configure as configure 
+
+DEFAULT_CONTENT={"BASE_PATH":"~/Alexandria"}
+
+# Caminho para o arquivo de configuração
+CONFIG_PATH = os.path.join(os.path.expanduser("~"),".config",about.__package__,"config.json")
+configure.verify_default_config(CONFIG_PATH, default_content=DEFAULT_CONTENT)
+CONFIG=configure.load_config(CONFIG_PATH)
+
+
+def open_filepath(path_arquivo: str):
+    """
+    Abre o arquivo no editor de texto padrão do sistema operacional.
+    Funciona no Windows, macOS e Linux.
+    """
+    if not os.path.exists(path_arquivo):
+        raise FileNotFoundError(f"Arquivo não encontrado: {path_arquivo}")
+
+    try:
+        if sys.platform.startswith('darwin'):  # macOS
+            subprocess.Popen(['open', path_arquivo])
+        elif os.name == 'nt':  # Windows
+            os.startfile(path_arquivo)
+        elif os.name == 'posix':  # Linux / Unix
+            subprocess.Popen(['xdg-open', path_arquivo])
+        else:
+            raise OSError(f"Sistema operacional não suportado: {sys.platform}")
+    except Exception as e:
+        print(f"Erro ao abrir o arquivo: {e}")
+
+
+if not os.path.exists(os.path.expanduser(CONFIG["BASE_PATH"])):
+    CONFIG=DEFAULT_CONTENT.copy()
+    os.makedirs(os.path.join(os.path.expanduser(CONFIG["BASE_PATH"]),"Library"))
 
 class Alexandria(QMainWindow):
     def __init__(self):
@@ -47,7 +72,7 @@ class Alexandria(QMainWindow):
 
         # Configuração dos modelos
         self.dir_model = QFileSystemModel()
-        self.dir_model.setRootPath(BASE_PATH)
+        self.dir_model.setRootPath(os.path.expanduser(CONFIG["BASE_PATH"]))
         self.dir_model.setFilter(QDir.AllDirs | QDir.NoDotAndDotDot)
 
         # Modelo para arquivos do diretório atual (não recursivo)
@@ -71,7 +96,7 @@ class Alexandria(QMainWindow):
         # Widgets principais
         self.tree_view = QTreeView()
         self.tree_view.setModel(self.dir_model)
-        self.tree_view.setRootIndex(self.dir_model.index(BASE_PATH))
+        self.tree_view.setRootIndex(self.dir_model.index(os.path.expanduser(CONFIG["BASE_PATH"])))
         self.tree_view.setHeaderHidden(True)
         self.tree_view.hideColumn(1)
         self.tree_view.hideColumn(2)
@@ -111,7 +136,7 @@ class Alexandria(QMainWindow):
 
         # base path
         self.basepath_box = QLineEdit()
-        self.basepath_box.setText(BASE_PATH)
+        self.basepath_box.setText(os.path.expanduser(CONFIG["BASE_PATH"]))
         self.basepath_box.returnPressed.connect(self.basepath_box_pressed)
         change_basepath_button = QPushButton("Select path")
         change_basepath_button.clicked.connect(self.select_base_path)
@@ -171,6 +196,12 @@ class Alexandria(QMainWindow):
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.toolbar.addWidget(spacer)
         
+        self.configure_action = QAction("Configure", self)
+        self.configure_action.setIcon(QIcon.fromTheme("document-properties"))
+        self.configure_action.setToolTip("Configure the global variables of program")
+        self.configure_action.triggered.connect(self.configure_function)
+        self.toolbar.addAction(self.configure_action)
+        
         self.coffee_action = QAction("Coffee", self)
         self.coffee_action.setIcon(QIcon.fromTheme("emblem-favorite"))
         self.coffee_action.setToolTip("Buy me a coffee (TrucomanX)")
@@ -183,6 +214,8 @@ class Alexandria(QMainWindow):
         self.about_action.setToolTip("Show the information of program.")
         self.toolbar.addAction(self.about_action)
         
+    def configure_function(self):
+        open_filepath(CONFIG_PATH)
 
     def buy_me_a_coffee(self):
         self.status_bar.showMessage("Buy me a coffee in https://ko-fi.com/trucomanx")
@@ -233,27 +266,27 @@ class Alexandria(QMainWindow):
         self.worker.start()
 
     def add_file(self):
-        save_file_in(self,BASE_PATH,self.refresh)
+        save_file_in(self,os.path.expanduser(CONFIG["BASE_PATH"]),self.refresh)
 
 
     def refresh(self):
         self.dir_model.setRootPath("")  # Força atualização
-        self.dir_model.setRootPath(BASE_PATH)
-        self.tree_view.setRootIndex(self.dir_model.index(BASE_PATH))
+        self.dir_model.setRootPath(os.path.expanduser(CONFIG["BASE_PATH"]))
+        self.tree_view.setRootIndex(self.dir_model.index(os.path.expanduser(CONFIG["BASE_PATH"])))
         self.on_tree_selection_changed()
        
     def change_base_path(self,new_path):
-        global BASE_PATH
+        global CONFIG
         if os.path.exists(new_path) and os.path.isdir(new_path):
             #self.tree_view.selectionModel().clearSelection()
             
-            BASE_PATH = str(new_path)
+            CONFIG["BASE_PATH"] = str(new_path)
             
-            self.basepath_box.setText(BASE_PATH)
+            self.basepath_box.setText(os.path.expanduser(CONFIG["BASE_PATH"]))
 
-            self.dir_model.setRootPath(BASE_PATH)
+            self.dir_model.setRootPath(os.path.expanduser(CONFIG["BASE_PATH"]))
             self.tree_view.setModel(self.dir_model)
-            self.tree_view.setRootIndex(self.dir_model.index(BASE_PATH))
+            self.tree_view.setRootIndex(self.dir_model.index(os.path.expanduser(CONFIG["BASE_PATH"])))
             
             model = QStandardItemModel()  
             model.clear()  
@@ -270,7 +303,7 @@ class Alexandria(QMainWindow):
         new_path = QFileDialog.getExistingDirectory(
             self, 
             "Select or create a Diretory", 
-            BASE_PATH,
+            os.path.expanduser(CONFIG["BASE_PATH"]),
             QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog  # Importante para ter mais opções
         )
 
@@ -280,10 +313,10 @@ class Alexandria(QMainWindow):
         
 
     def open_file(self, index):
-        open_file_from_index(self,BASE_PATH,index)
+        open_file_from_index(self,os.path.expanduser(CONFIG["BASE_PATH"]),index)
         
     def show_context_menu(self, pos):
-        show_context_menu_from_index(self, BASE_PATH, pos)
+        show_context_menu_from_index(self, os.path.expanduser(CONFIG["BASE_PATH"]), pos)
 
     def start_search(self):
         search_text = self.search_box.text().strip()
@@ -292,7 +325,7 @@ class Alexandria(QMainWindow):
 
         selected = self.tree_view.selectedIndexes()
         if not selected:
-            search_root = BASE_PATH
+            search_root = os.path.expanduser(CONFIG["BASE_PATH"])
         else:
             search_root = self.dir_model.filePath(selected[0])
 
@@ -308,7 +341,7 @@ class Alexandria(QMainWindow):
         self.progress_bar.setValue(value)
 
     def display_search_results(self, file_list):
-        display_search_results_from_file_list(self, BASE_PATH, file_list)
+        display_search_results_from_file_list(self, os.path.expanduser(CONFIG["BASE_PATH"]), file_list)
         self.table_view.setEnabled(True)
 
     def clear_search(self):
